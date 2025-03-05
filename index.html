@@ -3,7 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SpellChecking.ai - Correct Your Typos</title>
+    <title>SpellChecking.ai - AI Grammar & Spelling Correction Tool</title>
+    <meta name="description" content="Free online tool that uses AI to correct spelling, grammar, and typos in your text. Instantly improve your writing with advanced error detection.">
+    <meta name="keywords" content="spelling checker, grammar correction, typo fixer, AI text correction, proofreading tool, writing improvement">
+    <meta name="robots" content="index, follow">
+    <meta property="og:title" content="SpellChecking.ai - AI Grammar & Spelling Correction Tool">
+    <meta property="og:description" content="Free online tool that uses AI to correct spelling, grammar, and typos in your text. Instantly improve your writing.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://spellchecking.ai/">
+    <meta property="og:image" content="https://spellchecking.ai/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:creator" content="@pjlbrunelle">
+    <link rel="canonical" href="https://spellchecking.ai/">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -54,8 +65,17 @@
         
         .subtitle {
             font-size: 1.2rem;
-            margin-bottom: 2rem;
+            margin-bottom: 0.5rem;
             color: #666;
+        }
+        
+        .seo-description {
+            font-size: 1rem;
+            margin-bottom: 2rem;
+            color: #888;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
         }
         
         .editor-container {
@@ -244,10 +264,37 @@
             text-align: center;
         }
         
+        .features {
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+            text-align: left;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .features h2 {
+            font-size: 1.2rem;
+            color: #555;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        
+        .features ul {
+            padding-left: 1.5rem;
+            color: #666;
+        }
+        
+        .features li {
+            margin-bottom: 0.5rem;
+        }
+        
         .credits {
-            margin-top: 1rem;
+            margin-top: 1.5rem;
             font-size: 0.85rem;
             color: #999;
+            border-top: 1px solid #eee;
+            padding-top: 1.5rem;
         }
         
         .credits a {
@@ -365,6 +412,7 @@
     <div class="container">
         <h1>SpellChecking.ai</h1>
         <p class="subtitle">Correct typos and grammar with AI precision</p>
+        <p class="seo-description">Free AI-powered tool to fix spelling errors, grammar mistakes, and improve your writing</p>
         
         <div class="editor-container">
             <div class="text-panel">
@@ -422,13 +470,47 @@
         <div class="footer">
             <p>SpellChecking.ai provides AI-powered text correction to fix typos, grammar, and improve clarity.</p>
             <p>Not storing any of your text. All processing happens through secure API calls.</p>
+            
+            <div class="features">
+                <h2>Features</h2>
+                <ul>
+                    <li>Instantly correct spelling errors and typos</li>
+                    <li>Fix grammatical mistakes and punctuation</li>
+                    <li>Improve sentence structure and clarity</li>
+                    <li>See all changes highlighted for easy comparison</li>
+                    <li>Free to use with no account required</li>
+                </ul>
+            </div>
+            
             <div class="credits">
-                by <a href="https://x.com/pjlbrunelle" target="_blank">Pierre Brunelle</a>, 
-                built with <a href="https://claude.ai/" target="_blank">Claude</a>. 
-                Currently working on <a href="https://github.com/pixeltable/pixeltable" target="_blank">Pixeltable</a>
+                by <a href="https://x.com/pjlbrunelle" target="_blank" rel="noopener">Pierre Brunelle</a>, 
+                built with <a href="https://claude.ai/" target="_blank" rel="noopener">Claude</a>. 
+                Currently working on <a href="https://github.com/pixeltable/pixeltable" target="_blank" rel="noopener">Pixeltable</a>
             </div>
         </div>
     </div>
+    
+    <!-- Structured data for rich search results -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "SpellChecking.ai",
+      "url": "https://spellchecking.ai/",
+      "description": "AI-powered tool to correct spelling, grammar, and improve writing clarity.",
+      "applicationCategory": "UtilityApplication",
+      "offers": {
+        "@type": "Offer",
+        "price": "0"
+      },
+      "operatingSystem": "All",
+      "creator": {
+        "@type": "Person",
+        "name": "Pierre Brunelle",
+        "url": "https://x.com/pjlbrunelle"
+      }
+    }
+    </script>
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -713,5 +795,9 @@
             }
         });
     </script>
+    <!-- Add semantic HTML5 elements for better SEO -->
+    <footer>
+        <p>© 2025 SpellChecking.ai - <a href="/privacy.html">Privacy Policy</a> - <a href="/terms.html">Terms of Service</a></p>
+    </footer>
 </body>
 </html>
