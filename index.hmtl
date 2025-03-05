@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpellChecking.ai - Correct Your Typos</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4a6bff;
+            --primary-dark: #3a54cc;
+            --secondary-color: #444;
+            --bg-color: #f9f9f9;
+            --text-color: #333;
+            --highlight-bg: #e6f7ff;
+            --highlight-add: #e6ffea;
+            --highlight-remove: #ffebe6;
+            --card-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            --border-radius: 16px;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 900px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary-color);
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            color: #666;
+        }
+        
+        .editor-container {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            width: 100%;
+        }
+        
+        @media (min-width: 768px) {
+            .editor-container {
+                flex-direction: row;
+            }
+        }
+        
+        .text-panel {
+            flex: 1;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            padding: 1.5rem;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .panel-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--primary-color);
+        }
+        
+        textarea {
+            flex: 1;
+            width: 100%;
+            padding: 1rem;
+            font-size: 1rem;
+            line-height: 1.5;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            resize: none;
+            outline: none;
+        }
+        
+        textarea:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(74, 107, 255, 0.2);
+        }
+        
+        .result-content {
+            flex: 1;
+            text-align: left;
+            padding: 1rem;
+            font-size: 1rem;
+            line-height: 1.5;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            overflow-y: auto;
+            background-color: white;
+            white-space: pre-wrap;
+        }
+        
+        .ins {
+            background-color: var(--highlight-add);
+            text-decoration: none;
+            color: green;
+        }
+        
+        .del {
+            background-color: var(--highlight-remove);
+            text-decoration: line-through;
+            color: red;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+        
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 1rem 1.8rem;
+            font-size: 1.1rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(74, 107, 255, 0.2);
+        }
+        
+        .btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(74, 107, 255, 0.25);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn-secondary {
+            background-color: #e0e0e0;
+            color: #333;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-secondary:hover {
+            background-color: #d0d0d0;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+        }
+        
+        .loading-spinner {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(74, 107, 255, 0.2);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .api-status {
+            font-size: 0.9rem;
+            color: #888;
+            margin-top: 0.5rem;
+            display: none;
+        }
+        
+        .footer {
+            margin-top: 2rem;
+            color: #777;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            text-align: center;
+        }
+        
+        .sample-text {
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            color: #666;
+            cursor: pointer;
+            text-decoration: underline;
+            display: inline-block;
+        }
+        
+        .sample-text:hover {
+            color: var(--primary-color);
+        }
+        
+        .copy-button {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        
+        .copy-button:hover {
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SpellChecking.ai</h1>
+        <p class="subtitle">Correct typos and grammar with AI precision</p>
+        
+        <div class="editor-container">
+            <div class="text-panel">
+                <div class="panel-header">
+                    <div class="panel-title">Input Text</div>
+                    <a class="sample-text" id="loadSample">Load Sample Text</a>
+                </div>
+                <textarea id="inputText" placeholder="Paste or type your text here with typos or grammatical errors..."></textarea>
+            </div>
+            
+            <div class="text-panel">
+                <div class="panel-header">
+                    <div class="panel-title">Corrected Text</div>
+                    <button class="copy-button" id="copyButton" title="Copy corrected text">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+                <div id="resultText" class="result-content">
+                    Your corrected text will appear here with changes highlighted
+                </div>
+            </div>
+        </div>
+        
+        <div class="action-buttons">
+            <button id="correctButton" class="btn">Correct Text</button>
+            <button id="clearButton" class="btn btn-secondary">Clear</button>
+        </div>
+        
+        <div id="loadingSpinner" class="loading-spinner">
+            <div class="spinner"></div>
+            <div id="apiStatus" class="api-status">Connecting to AI service...</div>
+        </div>
+        
+        <div class="footer">
+            <p>SpellChecking.ai provides AI-powered text correction to fix typos, grammar, and improve clarity.</p>
+            <p>Not storing any of your text. All processing happens through secure API calls.</p>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputText = document.getElementById('inputText');
+            const resultText = document.getElementById('resultText');
+            const correctButton = document.getElementById('correctButton');
+            const clearButton = document.getElementById('clearButton');
+            const copyButton = document.getElementById('copyButton');
+            const loadSample = document.getElementById('loadSample');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const apiStatus = document.getElementById('apiStatus');
+            
+            // API endpoint (Vercel serverless function)
+            const API_ENDPOINT = '/api/correct';
+            
+            // Sample text with common errors
+            const SAMPLE_TEXT = "Thier was a problam with the delivary yesterday. I recieved the wrong iteams and alot of them where damaged. Can you please adress this isue as soon as posible? I have attaced some photoes of the damege. I look foward to your responce.";
+            
+            // Load sample text
+            loadSample.addEventListener('click', function() {
+                inputText.value = SAMPLE_TEXT;
+            });
+            
+            // Clear both input and result
+            clearButton.addEventListener('click', function() {
+                inputText.value = '';
+                resultText.innerHTML = 'Your corrected text will appear here with changes highlighted';
+            });
+            
+            // Copy corrected text (without markup)
+            copyButton.addEventListener('click', function() {
+                // Extract text without HTML markup
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = resultText.innerHTML;
+                
+                // Get plain text without formatting
+                const plainText = tempDiv.textContent || tempDiv.innerText;
+                
+                navigator.clipboard.writeText(plainText).then(function() {
+                    copyButton.innerHTML = '<i class="fas fa-check"></i>';
+                    setTimeout(() => {
+                        copyButton.innerHTML = '<i class="fas fa-copy"></i>';
+                    }, 2000);
+                }).catch(function(err) {
+                    console.error('Could not copy text: ', err);
+                });
+            });
+            
+            // Handle the correction process
+            correctButton.addEventListener('click', async function() {
+                const text = inputText.value.trim();
+                
+                if (!text) {
+                    alert('Please enter some text to correct');
+                    return;
+                }
+                
+                // Show loading spinner
+                loadingSpinner.style.display = 'flex';
+                apiStatus.style.display = 'block';
+                apiStatus.textContent = 'Connecting to AI service...';
+                
+                try {
+                    apiStatus.textContent = 'Processing your text...';
+                    
+                    const response = await fetch(API_ENDPOINT, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ text: text })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('API request failed');
+                    }
+                    
+                    const data = await response.json();
+                    
+                    // Hide loading spinner
+                    loadingSpinner.style.display = 'none';
+                    
+                    // Process the differences and highlight them
+                    const diffResult = highlightDifferences(text, data.correctedText);
+                    resultText.innerHTML = diffResult;
+                    
+                } catch (error) {
+                    console.error('Error:', error);
+                    
+                    // Hide loading spinner
+                    loadingSpinner.style.display = 'none';
+                    
+                    // Display error message
+                    resultText.innerHTML = 'Sorry, there was an error processing your text. Please try again later.';
+                }
+            });
+            
+            // Function to highlight differences between original and corrected text
+            function highlightDifferences(original, corrected) {
+                // Simple implementation using a character-based approach
+                if (!corrected) return original;
+                
+                // Convert to array of words
+                const originalWords = original.split(/\s+/);
+                const correctedWords = corrected.split(/\s+/);
+                
+                let result = '';
+                let i = 0, j = 0;
+                
+                // Simple word-by-word comparison
+                while (i < originalWords.length || j < correctedWords.length) {
+                    if (i >= originalWords.length) {
+                        // Extra words in corrected text
+                        result += ` <ins class="ins">${correctedWords[j]}</ins>`;
+                        j++;
+                    } else if (j >= correctedWords.length) {
+                        // Extra words in original text
+                        result += ` <del class="del">${originalWords[i]}</del>`;
+                        i++;
+                    } else if (originalWords[i].toLowerCase() === correctedWords[j].toLowerCase()) {
+                        // Words match
+                        result += ` ${correctedWords[j]}`;
+                        i++;
+                        j++;
+                    } else {
+                        // Words don't match - check for simple substitution
+                        const similarity = calculateSimilarity(originalWords[i], correctedWords[j]);
+                        if (similarity > 0.6) {
+                            // Likely a correction of the same word
+                            result += ` <del class="del">${originalWords[i]}</del><ins class="ins">${correctedWords[j]}</ins>`;
+                            i++;
+                            j++;
+                        } else {
+                            // Check next words for better alignment
+                            if (i + 1 < originalWords.length && 
+                                originalWords[i + 1].toLowerCase() === correctedWords[j].toLowerCase()) {
+                                // Word was deleted
+                                result += ` <del class="del">${originalWords[i]}</del>`;
+                                i++;
+                            } else if (j + 1 < correctedWords.length && 
+                                      originalWords[i].toLowerCase() === correctedWords[j + 1].toLowerCase()) {
+                                // Word was inserted
+                                result += ` <ins class="ins">${correctedWords[j]}</ins>`;
+                                j++;
+                            } else {
+                                // Substitution
+                                result += ` <del class="del">${originalWords[i]}</del><ins class="ins">${correctedWords[j]}</ins>`;
+                                i++;
+                                j++;
+                            }
+                        }
+                    }
+                }
+                
+                return result.trim();
+            }
+            
+            // Calculate similarity between two strings (Levenshtein distance based)
+            function calculateSimilarity(a, b) {
+                if (a.length === 0) return 0;
+                if (b.length === 0) return 0;
+                
+                const matrix = Array(a.length + 1).fill().map(() => Array(b.length + 1).fill(0));
+                
+                for (let i = 0; i <= a.length; i++) {
+                    matrix[i][0] = i;
+                }
+                
+                for (let j = 0; j <= b.length; j++) {
+                    matrix[0][j] = j;
+                }
+                
+                for (let i = 1; i <= a.length; i++) {
+                    for (let j = 1; j <= b.length; j++) {
+                        const cost = a[i-1] === b[j-1] ? 0 : 1;
+                        matrix[i][j] = Math.min(
+                            matrix[i-1][j] + 1,      // deletion
+                            matrix[i][j-1] + 1,      // insertion
+                            matrix[i-1][j-1] + cost  // substitution
+                        );
+                    }
+                }
+                
+                const distance = matrix[a.length][b.length];
+                const maxLength = Math.max(a.length, b.length);
+                
+                return 1 - (distance / maxLength);
+            }
+
+            // Check if this is a dev environment
+            const isDevEnvironment = 
+                window.location.hostname === 'localhost' || 
+                window.location.hostname === '127.0.0.1';
+
+            // Add event listener for local testing if in dev environment
+            if (isDevEnvironment) {
+                correctButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Prevent the actual API call in the dev environment
+                    if (loadingSpinner.style.display === 'flex') {
+                        setTimeout(() => {
+                            // Simulate API response
+                            const original = inputText.value;
+                            const corrected = simulateCorrection(original);
+                            
+                            // Hide loading spinner
+                            loadingSpinner.style.display = 'none';
+                            
+                            // Display the result
+                            const diffResult = highlightDifferences(original, corrected);
+                            resultText.innerHTML = diffResult;
+                        }, 1500);
+                    }
+                });
+            }
+
+            // Function to simulate text correction for local testing
+            function simulateCorrection(text) {
+                // Simple corrections for common errors
+                return text
+                    .replace(/Thier/g, "Their")
+                    .replace(/thier/g, "their")
+                    .replace(/problam/g, "problem")
+                    .replace(/delivary/g, "delivery")
+                    .replace(/recieved/g, "received")
+                    .replace(/iteams/g, "items")
+                    .replace(/alot/g, "a lot")
+                    .replace(/where/g, "were")
+                    .replace(/adress/g, "address")
+                    .replace(/isue/g, "issue")
+                    .replace(/posible/g, "possible")
+                    .replace(/attaced/g, "attached")
+                    .replace(/photoes/g, "photos")
+                    .replace(/damege/g, "damage")
+                    .replace(/foward/g, "forward")
+                    .replace(/responce/g, "response");
+            }
+        });
+    </script>
+</body>
+</html>
