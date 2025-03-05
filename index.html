@@ -53,7 +53,7 @@
             max-width: 900px;
             width: 100%;
             text-align: center;
-            position: relative; /* For copy feedback positioning */
+            position: relative;
         }
         
         h1 {
@@ -349,7 +349,7 @@
             color: var(--primary-color);
         }
         
-        .copy-button, .icon-button {
+        .icon-button {
             background: none;
             border: none;
             color: #666;
@@ -362,37 +362,9 @@
             border-radius: 4px;
         }
         
-        .copy-button:hover, .icon-button:hover {
+        .icon-button:hover {
             color: var(--primary-color);
             background-color: rgba(74, 107, 255, 0.1);
-        }
-        
-        /* FIXED: Updated copy feedback styles */
-        .copy-feedback {
-            position: fixed;
-            background-color: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 6px 12px;
-            border-radius: 4px;
-            font-size: 0.85rem;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.3s;
-            z-index: 1000;
-            /* Added for better visibility */
-            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
-        }
-        
-        /* Animation for feedback display */
-        @keyframes fadeInOut {
-            0% { opacity: 0; transform: translateY(10px); }
-            10% { opacity: 1; transform: translateY(0); }
-            90% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-10px); }
-        }
-        
-        .copy-feedback.visible {
-            animation: fadeInOut 2s ease-in-out;
         }
         
         .tooltip {
@@ -430,9 +402,6 @@
         <p class="subtitle">Correct typos and grammar with AI precision</p>
         <p class="seo-description">AI-powered tool to fix spelling errors, grammar mistakes, and improve your writing</p>
         
-        <!-- FIXED: Moved copy feedback outside panels for better positioning -->
-        <div id="copyFeedback" class="copy-feedback">Copied to clipboard!</div>
-        
         <div class="editor-container">
             <div class="text-panel">
                 <div class="panel-header">
@@ -455,10 +424,6 @@
                         <button class="icon-button toggle-view tooltip" id="toggleViewButton" title="Toggle view">
                             <i class="fas fa-eye"></i>
                             <span class="tooltiptext">Toggle diff/clean view</span>
-                        </button>
-                        <button class="copy-button tooltip" id="copyButton" title="Copy corrected text">
-                            <i class="fas fa-copy"></i>
-                            <span class="tooltiptext">Copy to clipboard</span>
                         </button>
                     </div>
                 </div>
@@ -525,7 +490,6 @@
             const resultText = document.getElementById('resultText');
             const correctButton = document.getElementById('correctButton');
             const clearButton = document.getElementById('clearButton');
-            const copyButton = document.getElementById('copyButton');
             const loadSample = document.getElementById('loadSample');
             const loadingSpinner = document.getElementById('loadingSpinner');
             const apiStatus = document.getElementById('apiStatus');
@@ -553,7 +517,6 @@
             const diffViewBtn = document.getElementById('diffViewBtn');
             const cleanViewBtn = document.getElementById('cleanViewBtn');
             const cleanResultText = document.getElementById('cleanResultText');
-            const copyFeedback = document.getElementById('copyFeedback');
             
             let showingDiff = true;
             
@@ -578,77 +541,6 @@
             });
             cleanViewBtn.addEventListener('click', function() {
                 if (showingDiff) toggleView();
-            });
-            
-            // FIXED: Improved copy functionality
-            copyButton.addEventListener('click', function() {
-                // Get the text to copy (from clean view source)
-                const textToCopy = cleanResultText.textContent || cleanResultText.innerText;
-                
-                // Skip if no content or default message
-                if (!textToCopy || textToCopy === 'Your corrected text will appear here without highlighting') {
-                    return;
-                }
-                
-                try {
-                    // Modern Clipboard API
-                    navigator.clipboard.writeText(textToCopy)
-                        .then(function() {
-                            showCopySuccess();
-                        })
-                        .catch(function(err) {
-                            console.error('Modern clipboard API failed:', err);
-                            fallbackCopy();
-                        });
-                } catch (err) {
-                    console.error('Error with clipboard API:', err);
-                    fallbackCopy();
-                }
-                
-                function fallbackCopy() {
-                    // Create a temporary textarea
-                    const textarea = document.createElement('textarea');
-                    textarea.value = textToCopy;
-                    textarea.style.position = 'fixed';
-                    textarea.style.opacity = '0';
-                    document.body.appendChild(textarea);
-                    textarea.select();
-                    
-                    try {
-                        const successful = document.execCommand('copy');
-                        if (successful) {
-                            showCopySuccess();
-                        } else {
-                            alert('Unable to copy text');
-                        }
-                    } catch (err) {
-                        console.error('execCommand Error:', err);
-                        alert('Unable to copy text. Please select and copy manually.');
-                    }
-                    
-                    document.body.removeChild(textarea);
-                }
-                
-                function showCopySuccess() {
-                    // Visual feedback on button
-                    copyButton.innerHTML = '<i class="fas fa-check"></i>';
-                    
-                    // Position feedback near button
-                    const buttonRect = copyButton.getBoundingClientRect();
-                    copyFeedback.style.top = `${buttonRect.top - 40}px`;
-                    copyFeedback.style.left = `${buttonRect.left}px`;
-                    
-                    // Show feedback
-                    copyFeedback.classList.add('visible');
-                    copyFeedback.style.opacity = '1';
-                    
-                    // Reset after delay
-                    setTimeout(() => {
-                        copyButton.innerHTML = '<i class="fas fa-copy"></i>';
-                        copyFeedback.style.opacity = '0';
-                        copyFeedback.classList.remove('visible');
-                    }, 2000);
-                }
             });
             
             // Handle the correction process
@@ -686,3 +578,169 @@
                     loadingSpinner.style.display = 'none';
                     
                     // Process the differences and highlight them
+                    const diffResult = highlightDifferences(text, data.correctedText);
+                    resultText.innerHTML = diffResult;
+                    
+                    // Update clean result text (no highlighting)
+                    cleanResultText.textContent = data.correctedText;
+                    
+                } catch (error) {
+                    console.error('Error:', error);
+                    
+                    // Hide loading spinner
+                    loadingSpinner.style.display = 'none';
+                    
+                    // Display error message
+                    resultText.innerHTML = 'Sorry, there was an error processing your text. Please try again later.';
+                    cleanResultText.textContent = 'Sorry, there was an error processing your text. Please try again later.';
+                }
+            });
+            
+            // Function to highlight differences between original and corrected text
+            function highlightDifferences(original, corrected) {
+                // Simple implementation using a character-based approach
+                if (!corrected) return original;
+                
+                // Convert to array of words
+                const originalWords = original.split(/\s+/);
+                const correctedWords = corrected.split(/\s+/);
+                
+                let result = '';
+                let i = 0, j = 0;
+                
+                // Simple word-by-word comparison
+                while (i < originalWords.length || j < correctedWords.length) {
+                    if (i >= originalWords.length) {
+                        // Extra words in corrected text
+                        result += ` <ins class="ins">${correctedWords[j]}</ins>`;
+                        j++;
+                    } else if (j >= correctedWords.length) {
+                        // Extra words in original text
+                        result += ` <del class="del">${originalWords[i]}</del>`;
+                        i++;
+                    } else if (originalWords[i].toLowerCase() === correctedWords[j].toLowerCase()) {
+                        // Words match
+                        result += ` ${correctedWords[j]}`;
+                        i++;
+                        j++;
+                    } else {
+                        // Words don't match - check for simple substitution
+                        const similarity = calculateSimilarity(originalWords[i], correctedWords[j]);
+                        if (similarity > 0.6) {
+                            // Likely a correction of the same word
+                            result += ` <del class="del">${originalWords[i]}</del><ins class="ins">${correctedWords[j]}</ins>`;
+                            i++;
+                            j++;
+                        } else {
+                            // Check next words for better alignment
+                            if (i + 1 < originalWords.length && 
+                                originalWords[i + 1].toLowerCase() === correctedWords[j].toLowerCase()) {
+                                // Word was deleted
+                                result += ` <del class="del">${originalWords[i]}</del>`;
+                                i++;
+                            } else if (j + 1 < correctedWords.length && 
+                                      originalWords[i].toLowerCase() === correctedWords[j + 1].toLowerCase()) {
+                                // Word was inserted
+                                result += ` <ins class="ins">${correctedWords[j]}</ins>`;
+                                j++;
+                            } else {
+                                // Substitution
+                                result += ` <del class="del">${originalWords[i]}</del><ins class="ins">${correctedWords[j]}</ins>`;
+                                i++;
+                                j++;
+                            }
+                        }
+                    }
+                }
+                
+                return result.trim();
+            }
+            
+            // Calculate similarity between two strings (Levenshtein distance based)
+            function calculateSimilarity(a, b) {
+                if (a.length === 0) return 0;
+                if (b.length === 0) return 0;
+                
+                const matrix = Array(a.length + 1).fill().map(() => Array(b.length + 1).fill(0));
+                
+                for (let i = 0; i <= a.length; i++) {
+                    matrix[i][0] = i;
+                }
+                
+                for (let j = 0; j <= b.length; j++) {
+                    matrix[0][j] = j;
+                }
+                
+                for (let i = 1; i <= a.length; i++) {
+                    for (let j = 1; j <= b.length; j++) {
+                        const cost = a[i-1] === b[j-1] ? 0 : 1;
+                        matrix[i][j] = Math.min(
+                            matrix[i-1][j] + 1,      // deletion
+                            matrix[i][j-1] + 1,      // insertion
+                            matrix[i-1][j-1] + cost  // substitution
+                        );
+                    }
+                }
+                
+                const distance = matrix[a.length][b.length];
+                const maxLength = Math.max(a.length, b.length);
+                
+                return 1 - (distance / maxLength);
+            }
+
+            // Check if this is a dev environment
+            const isDevEnvironment = 
+                window.location.hostname === 'localhost' || 
+                window.location.hostname === '127.0.0.1';
+
+            // Add event listener for local testing if in dev environment
+            if (isDevEnvironment) {
+                correctButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Prevent the actual API call in the dev environment
+                    if (loadingSpinner.style.display === 'flex') {
+                        setTimeout(() => {
+                            // Simulate API response
+                            const original = inputText.value;
+                            const corrected = simulateCorrection(original);
+                            
+                            // Hide loading spinner
+                            loadingSpinner.style.display = 'none';
+                            
+                            // Display the result
+                            const diffResult = highlightDifferences(original, corrected);
+                            resultText.innerHTML = diffResult;
+                            
+                            // Update clean result text
+                            cleanResultText.textContent = corrected;
+                        }, 1500);
+                    }
+                });
+            }
+
+            // Function to simulate text correction for local testing
+            function simulateCorrection(text) {
+                // Simple corrections for common errors
+                return text
+                    .replace(/Thier/g, "Their")
+                    .replace(/thier/g, "their")
+                    .replace(/problam/g, "problem")
+                    .replace(/delivary/g, "delivery")
+                    .replace(/recieved/g, "received")
+                    .replace(/iteams/g, "items")
+                    .replace(/alot/g, "a lot")
+                    .replace(/where/g, "were")
+                    .replace(/adress/g, "address")
+                    .replace(/isue/g, "issue")
+                    .replace(/posible/g, "possible")
+                    .replace(/attaced/g, "attached")
+                    .replace(/photoes/g, "photos")
+                    .replace(/damege/g, "damage")
+                    .replace(/foward/g, "forward")
+                    .replace(/responce/g, "response");
+            }
+        });
+    </script>
+</body>
+</html>
