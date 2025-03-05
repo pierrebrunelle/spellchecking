@@ -17,6 +17,7 @@
             --highlight-remove: #ffebe6;
             --card-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
             --border-radius: 16px;
+            --panel-border: #eaeaea;
         }
         
         * {
@@ -80,6 +81,7 @@
             min-height: 400px;
             display: flex;
             flex-direction: column;
+            border: 1px solid var(--panel-border);
         }
         
         .panel-header {
@@ -87,14 +89,26 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid #eee;
+            padding-bottom: 0.8rem;
+            border-bottom: 1px solid var(--panel-border);
+        }
+        
+        .action-icons {
+            display: flex;
+            gap: 12px;
         }
         
         .panel-title {
             font-weight: 600;
             font-size: 1.1rem;
             color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .panel-title i {
+            font-size: 0.9rem;
         }
         
         textarea {
@@ -115,6 +129,21 @@
         }
         
         .result-content {
+            flex: 1;
+            text-align: left;
+            padding: 1rem;
+            font-size: 1rem;
+            line-height: 1.5;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            overflow-y: auto;
+            background-color: white;
+            white-space: pre-wrap;
+            position: relative;
+        }
+        
+        .clean-result {
+            display: none;
             flex: 1;
             text-align: left;
             padding: 1rem;
@@ -215,6 +244,50 @@
             text-align: center;
         }
         
+        .credits {
+            margin-top: 1rem;
+            font-size: 0.85rem;
+            color: #999;
+        }
+        
+        .credits a {
+            color: #666;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        
+        .credits a:hover {
+            color: var(--primary-color);
+            text-decoration: underline;
+        }
+        
+        .view-toggle {
+            display: flex;
+            justify-content: center;
+            margin-top: 0.5rem;
+        }
+        
+        .toggle-btn {
+            background: none;
+            border: none;
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border-radius: 4px;
+            color: #666;
+            transition: all 0.2s;
+        }
+        
+        .toggle-btn.active {
+            background-color: rgba(74, 107, 255, 0.1);
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+        
+        .toggle-btn:hover:not(.active) {
+            background-color: #f0f0f0;
+        }
+        
         .sample-text {
             font-size: 0.9rem;
             margin-top: 0.5rem;
@@ -228,16 +301,63 @@
             color: var(--primary-color);
         }
         
-        .copy-button {
+        .copy-button, .icon-button {
             background: none;
             border: none;
             color: #666;
             cursor: pointer;
             transition: color 0.2s;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: 4px;
         }
         
-        .copy-button:hover {
+        .copy-button:hover, .icon-button:hover {
             color: var(--primary-color);
+            background-color: rgba(74, 107, 255, 0.1);
+        }
+        
+        .copy-feedback {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 100;
+        }
+        
+        .tooltip {
+            position: relative;
+        }
+        
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 120px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.75rem;
+            pointer-events: none;
+        }
+        
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
         }
     </style>
 </head>
@@ -249,7 +369,10 @@
         <div class="editor-container">
             <div class="text-panel">
                 <div class="panel-header">
-                    <div class="panel-title">Input Text</div>
+                    <div class="panel-title">
+                        <i class="fas fa-keyboard"></i>
+                        Input Text
+                    </div>
                     <a class="sample-text" id="loadSample">Load Sample Text</a>
                 </div>
                 <textarea id="inputText" placeholder="Paste or type your text here with typos or grammatical errors..."></textarea>
@@ -257,13 +380,31 @@
             
             <div class="text-panel">
                 <div class="panel-header">
-                    <div class="panel-title">Corrected Text</div>
-                    <button class="copy-button" id="copyButton" title="Copy corrected text">
-                        <i class="fas fa-copy"></i>
-                    </button>
+                    <div class="panel-title">
+                        <i class="fas fa-check-circle"></i>
+                        Corrected Text
+                    </div>
+                    <div class="action-icons">
+                        <button class="icon-button toggle-view tooltip" id="toggleViewButton" title="Toggle view">
+                            <i class="fas fa-eye"></i>
+                            <span class="tooltiptext">Toggle diff/clean view</span>
+                        </button>
+                        <button class="copy-button tooltip" id="copyButton" title="Copy corrected text">
+                            <i class="fas fa-copy"></i>
+                            <span class="tooltiptext">Copy to clipboard</span>
+                        </button>
+                    </div>
                 </div>
                 <div id="resultText" class="result-content">
                     Your corrected text will appear here with changes highlighted
+                    <div id="copyFeedback" class="copy-feedback">Copied!</div>
+                </div>
+                <div id="cleanResultText" class="clean-result">
+                    Your corrected text will appear here without highlighting
+                </div>
+                <div class="view-toggle">
+                    <button class="toggle-btn active" id="diffViewBtn">Show Changes</button>
+                    <button class="toggle-btn" id="cleanViewBtn">Show Clean Text</button>
                 </div>
             </div>
         </div>
@@ -281,6 +422,11 @@
         <div class="footer">
             <p>SpellChecking.ai provides AI-powered text correction to fix typos, grammar, and improve clarity.</p>
             <p>Not storing any of your text. All processing happens through secure API calls.</p>
+            <div class="credits">
+                by <a href="https://x.com/pjlbrunelle" target="_blank">Pierre Brunelle</a>, 
+                built with <a href="https://claude.ai/" target="_blank">Claude</a>. 
+                Currently working on <a href="https://github.com/pixeltable/pixeltable" target="_blank">Pixeltable</a>
+            </div>
         </div>
     </div>
     
@@ -312,19 +458,56 @@
                 resultText.innerHTML = 'Your corrected text will appear here with changes highlighted';
             });
             
+            // Toggle between diff and clean views
+            const toggleViewButton = document.getElementById('toggleViewButton');
+            const diffViewBtn = document.getElementById('diffViewBtn');
+            const cleanViewBtn = document.getElementById('cleanViewBtn');
+            const cleanResultText = document.getElementById('cleanResultText');
+            const copyFeedback = document.getElementById('copyFeedback');
+            
+            let showingDiff = true;
+            
+            function toggleView() {
+                showingDiff = !showingDiff;
+                if (showingDiff) {
+                    resultText.style.display = 'block';
+                    cleanResultText.style.display = 'none';
+                    diffViewBtn.classList.add('active');
+                    cleanViewBtn.classList.remove('active');
+                } else {
+                    resultText.style.display = 'none';
+                    cleanResultText.style.display = 'block';
+                    diffViewBtn.classList.remove('active');
+                    cleanViewBtn.classList.add('active');
+                }
+            }
+            
+            toggleViewButton.addEventListener('click', toggleView);
+            diffViewBtn.addEventListener('click', function() {
+                if (!showingDiff) toggleView();
+            });
+            cleanViewBtn.addEventListener('click', function() {
+                if (showingDiff) toggleView();
+            });
+            
             // Copy corrected text (without markup)
             copyButton.addEventListener('click', function() {
-                // Extract text without HTML markup
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = resultText.innerHTML;
+                // Get the text to copy (from clean view source)
+                const textToCopy = cleanResultText.textContent || cleanResultText.innerText;
                 
-                // Get plain text without formatting
-                const plainText = tempDiv.textContent || tempDiv.innerText;
+                // Show feedback
+                const buttonRect = copyButton.getBoundingClientRect();
+                copyFeedback.style.top = `${buttonRect.top - 30}px`;
+                copyFeedback.style.left = `${buttonRect.left + (buttonRect.width / 2) - 30}px`;
                 
-                navigator.clipboard.writeText(plainText).then(function() {
+                navigator.clipboard.writeText(textToCopy).then(function() {
+                    // Visual feedback
                     copyButton.innerHTML = '<i class="fas fa-check"></i>';
+                    copyFeedback.style.opacity = '1';
+                    
                     setTimeout(() => {
                         copyButton.innerHTML = '<i class="fas fa-copy"></i>';
+                        copyFeedback.style.opacity = '0';
                     }, 2000);
                 }).catch(function(err) {
                     console.error('Could not copy text: ', err);
@@ -369,6 +552,9 @@
                     const diffResult = highlightDifferences(text, data.correctedText);
                     resultText.innerHTML = diffResult;
                     
+                    // Update clean result text (no highlighting)
+                    cleanResultText.textContent = data.correctedText;
+                    
                 } catch (error) {
                     console.error('Error:', error);
                     
@@ -377,6 +563,7 @@
                     
                     // Display error message
                     resultText.innerHTML = 'Sorry, there was an error processing your text. Please try again later.';
+                    cleanResultText.textContent = 'Sorry, there was an error processing your text. Please try again later.';
                 }
             });
             
@@ -495,6 +682,9 @@
                             // Display the result
                             const diffResult = highlightDifferences(original, corrected);
                             resultText.innerHTML = diffResult;
+                            
+                            // Update clean result text
+                            cleanResultText.textContent = corrected;
                         }, 1500);
                     }
                 });
